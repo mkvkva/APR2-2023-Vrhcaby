@@ -11,48 +11,90 @@ class Backgammon:
                       19: -5, 20: 0, 21: 0, 22: 0, 23: 0, 24: 2
                       }
         # игровые значения
-        self.dice1_value = 0  # значение первого куба
-        self.dice2_value = 0  # значение второго куба
-        self.dice_values_list = []  # список значений кубов
+        self.dice1_value = 0
+        self.dice2_value = 0
+        self.dice_values_list = []
 
-        self.first_turn = None  # кто ходит первым
+        self.first_turn = None
 
-        self.number_point_from = 0  # из какого пункта берем шашку
-        self.number_point_to = 0  # не нужная переменная
-        self.user_turn_value = 0  # какое значение игрок хочет использовать для хода
+        self.number_point_from = 0
+        self.number_point_to = 0
+        self.user_turn_value = 0
 
-        self.bar_white_value = 0  # белые шашки на баре
-        self.bar_black_value = 0  # черные шашки на баре
+        self.bar_white_value = 0
+        self.bar_black_value = 0
 
-        self.bearing_off_white = 0  # выведенные белые шашки
-        self.bearing_off_black = 0  # выведенные черные шашки
+        self.bearing_off_white = 0
+        self.bearing_off_black = 0
 
-    # функция выводящая игровую доску в виде таблицы
     def print_board(self):
-        point_numbers = ["Čísla poli"]
-        for number in self.board.keys():
-            point_numbers.append(str(number))
+        print("Hrací pole:")
+        point_numbers_up = []
+        point_values_up = []
+        point_numbers_down = []
+        point_values_down = []
 
-        point_values = ["Počet kamenů"]
-        for value in self.board.values():
-            point_values.append(str(value))
+        for key, value in self.board.items():
+            if key >= 13:
+                point_numbers_up.append(str(key))
+                if value == 0:
+                    point_values_up.append("  ")
+                if (abs(value) > 0) and (abs(value) < 10):
+                    if (value < 0) or (abs(value) > 9):
+                        point_values_up.append(str(value))
+                    else:
+                        point_values_up.append(str(value) + " ")
+                if abs(value) > 9:
+                    point_values_up.append(str(value))
 
-        print(tabulate([point_values], headers=point_numbers, tablefmt="fancy_grid"))
+            if key < 10:
+                point_numbers_down.append(str(key)+" ")
+                if value == 0:
+                    point_values_down.append("  ")
+                if (abs(value) > 0) and (abs(value) < 10):
+                    if (value < 0) or (abs(value) > 9):
+                        point_values_down.append(str(value))
+                    else:
+                        point_values_down.append(str(value) + " ")
+                if abs(value) > 9:
+                    point_values_down.append(str(value))
 
-    # функция выводящая количество выбитых шашек
-    def print_bar(self):
-        print(tabulate([[self.bar_white_value, self.bar_black_value]],
-                       headers=["Bílé kameny na baru", "Černé kameny na baru"],
-                       tablefmt="fancy_grid"))
+            if (key < 13) and (key >= 10):
+                point_numbers_down.append(str(key))
+                if value == 0:
+                    point_values_down.append("  ")
+                else:
+                    point_values_down.append(str(value))
 
-    # функция выводящая количество выведенных из игры шашек
-    def print_bearing_off(self):
-        print(tabulate([[self.bearing_off_white, self.bearing_off_black]],
-                       headers=["Vyvedené bílé kameny", "Vyvedené černé kameny"],
-                       tablefmt="fancy_grid"))
+        # Переставляем зеркально числа в нижней части игрового поля
+
+        point_numbers_down_mirror = [' '] * len(point_numbers_down)
+        point_values_down_mirror = [' '] * len(point_numbers_down)
+
+        position = len(point_numbers_down)
+
+        for i in point_numbers_down:
+            position -= 1
+            point_numbers_down_mirror[position] = i
+            
+        position = len(point_values_down)
+        for i in point_values_down:
+            position -= 1
+            point_values_down_mirror[position] = i
+
+        table = point_numbers_up, point_values_up, ["  "] * len(point_values_down), point_values_down_mirror, point_numbers_down_mirror
+        print(tabulate(table, tablefmt="fancy_grid"))
+
+    # функция выводящая количество выбитых шашек и шашек в баре
+    def print_bar_bearing_off(self):
+        headers = ["Kamen", "Na baru", "Vyvedené"]
+        table = ["Bílé", str(self.bar_white_value), str(self.bearing_off_white)], \
+            ["černé", str(self.bar_black_value), str(self.bearing_off_black)]
+        print(tabulate(table, headers, tablefmt="fancy_grid"))
 
     # бросок кубиков
     def roll_dices(self):
+        self.dice_values_list = []
         self.dice1_value = random.randint(1, 6)
         self.dice2_value = random.randint(1, 6)
 
@@ -65,6 +107,159 @@ class Backgammon:
             self.dice_values_list.append(self.dice2_value)
             self.dice_values_list.append(self.dice2_value)
         return self.dice_values_list
+
+    # Найдем и покажем допустимые ходы для белых шашек
+    def legal_moves_white(self):
+        while self.dice_values_list:
+
+            if self.bar_white_value == 0:   # Если нет белых шашек отправленных в бар
+                # Проверка: можно ли сделать хоть один ход белыми шашками
+
+                for key in self.board.keys():
+                    if 7 <= key <= 24:
+                        if self.board[key] > 0:
+                            home_is_full = False  # Дом белых еще не заполнен
+                            break
+                        else:
+                            home_is_full = True   # В доме белых все шашки
+
+                possible_turns = []
+                possible_turns_allow_kost = ["Kost"]
+                possible_turns_allow_pole = ["Číslo poli"]
+
+                for value in self.dice_values_list:
+                    for key in self.board.keys():
+                        if self.board[key] > 0:  # Перебираем на доске только позиции белых
+
+                            try:
+                                if self.board[key-value] <= -2:  # Если позиция занята двумя и более черными шашками
+                                    possible_turns.append(0)
+                                else:
+                                    possible_turns.append(1)
+                                    possible_turns_allow_kost.append(value)
+                                    possible_turns_allow_pole.append(key)
+
+                            except KeyError:
+                                if home_is_full:
+                                    possible_turns.append(1)
+                                    possible_turns_allow_kost.append(value)
+                                    possible_turns_allow_pole.append(key)
+
+                                else:
+                                    possible_turns.append(0)
+
+                if 1 in possible_turns:
+                    print("Možné pohyby:")
+                    print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost, tablefmt="fancy_grid"))
+                    break
+                else:
+                    print("\nNení možno udělat žádný tah.")
+                    self.dice_values_list = []   # Обнуляем значения выпавших костей
+                    break
+
+            else:
+                # ситуация когда игрок должен ввести свою побитую шашку в игру
+                if self.bar_white_value:
+
+                    # код проверяющий можно ли сделать ход
+                    possible_turns = []
+                    possible_turns_allow_kost = ["Kost"]
+                    possible_turns_allow_pole = ["Číslo poli"]
+
+                    for value in self.dice_values_list:
+                        for i in range(self.bar_white_value):
+
+                            if self.board[25 - value] <= -2:
+                                possible_turns.append(0)
+                            else:
+                                possible_turns.append(1)
+                                possible_turns_allow_kost.append(value)
+                                possible_turns_allow_pole.append(25 - value)
+
+                    if 1 in possible_turns:
+                        print("Možné pohyby:")
+                        print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost,
+                                       tablefmt="fancy_grid"))
+                        break
+
+                    else:
+                        print("\nNení možno uvést kamen na desku.")
+                        self.dice_values_list = []
+                        break
+
+    # Найдем и покажем допустимые ходы для черных шашек
+    def legal_moves_black(self):
+        while self.dice_values_list:
+
+            if self.bar_black_value == 0:
+
+                for key in self.board.keys():
+                    if 1 <= key <= 18:
+                        if self.board[key] < 0:
+                            home_is_full = False
+                            break
+                        else:
+                            home_is_full = True
+
+                possible_turns = []
+                possible_turns_allow_kost = ["Kost"]
+                possible_turns_allow_pole = ["Číslo poli"]
+
+                for value in self.dice_values_list:
+                    for key in self.board.keys():
+                        if self.board[key] < 0:
+
+                            try:
+                                if self.board[key+value] >= 2:
+                                    possible_turns.append(0)
+                                else:
+                                    possible_turns.append(1)
+                                    possible_turns_allow_kost.append(value)
+                                    possible_turns_allow_pole.append(key)
+                            except KeyError:
+                                if home_is_full:
+                                    possible_turns.append(1)
+                                    possible_turns_allow_kost.append(value)
+                                    possible_turns_allow_pole.append(key)
+                                else:
+                                    possible_turns.append(0)
+
+                if 1 in possible_turns:
+                    print("Možné pohyby:")
+                    print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost, tablefmt="fancy_grid"))
+                    break
+
+                else:
+                    print("\nNení možno udělat žádný tah.")
+                    self.dice_values_list = []
+                    break
+
+            else:
+                if self.bar_black_value:
+
+                    possible_turns = []
+                    possible_turns_allow_kost = ["Kost"]
+                    possible_turns_allow_pole = ["Číslo poli"]
+
+                    for value in self.dice_values_list:
+                        for i in range(self.bar_black_value):
+
+                            if self.board[value] >= 2:
+                                possible_turns.append(0)
+                            else:
+                                possible_turns.append(1)
+                                possible_turns_allow_kost.append(value)
+                                possible_turns_allow_pole.append(value)
+
+                    if 1 in possible_turns:
+                        print("Možné pohyby:")
+                        print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost,
+                                       tablefmt="fancy_grid"))
+                        break
+                    else:
+                        print("\nNení možno uvést kamen na desku.")
+                        self.dice_values_list = []
+                        break
 
     # функция определяющая кто ходит первым
     def who_is_first(self):
@@ -91,7 +286,7 @@ class Backgammon:
 
     # основная игровая функция, реализующая ход белых шашек
     def white_turn(self):
-        print("----------\nTAH BÍLÝCH\n----------")
+        print("---------------\nTAH BÍLÝCH\n---------------")
 
         is_error_turn1 = True
         is_error_turn2 = True
@@ -101,43 +296,13 @@ class Backgammon:
 
         while self.dice_values_list:
 
+            self.print_board()
+            self.print_bar_bearing_off()
+            self.legal_moves_white()  # Вывод допустимых ходов белыми шашками
+
             is_error_turn3 = True
 
             if self.bar_white_value == 0:
-
-                # иногда на протежении игры могут происходить ситуации когда невозможно походить ни одной из шашек,
-                # этот блок кода проверяет возможно ли сделать хотя бы одно перемещение шашки за ход
-                # если невозможно - игрок пропускает ход
-                for key in self.board.keys():
-                    if 7 <= key <= 24:
-                        if self.board[key] > 0:
-                            home_is_full = False
-                            break
-                        else:
-                            home_is_full = True
-
-                possible_turns = []
-                for value in self.dice_values_list:
-                    for key in self.board.keys():
-                        if self.board[key] > 0:
-
-                            try:
-                                if self.board[key-value] <= -2:
-                                    possible_turns.append(0)
-                                else:
-                                    possible_turns.append(1)
-                            except KeyError:
-                                if home_is_full:
-                                    possible_turns.append(1)
-                                else:
-                                    possible_turns.append(0)
-
-                if 1 in possible_turns:
-                    pass
-                else:
-                    print("\nNení možno udělat žádný tah.")
-                    self.dice_values_list = []
-                    break
 
                 # просим от игрока ввести номер пункта с которого он хочет снять шашку
                 while is_error_turn1:
@@ -264,7 +429,7 @@ class Backgammon:
 
     # аналогичная функция для реализации хода, но уже для черных шашек
     def black_turn(self):
-        print("----------\nTAH ČERNÝCH\n----------")
+        print("---------------\nTAH ČERNÝCH\n---------------")
 
         is_error_turn1 = True
         is_error_turn2 = True
@@ -273,6 +438,11 @@ class Backgammon:
         print(f"Čísla na kostkách: {self.dice1_value}, {self.dice2_value}")
 
         while self.dice_values_list:
+
+            self.print_board()
+            backgammon.print_bar_bearing_off()
+
+            self.legal_moves_black()
 
             is_error_turn3 = True
 
@@ -422,7 +592,6 @@ class Backgammon:
                         self.dice_values_list = []
                         break
 
-
 run = True
 game = True
 backgammon = Backgammon()
@@ -430,17 +599,14 @@ backgammon = Backgammon()
 # основной игровой цикл
 while run:
 
+    print("==================== Nová hra ! ====================")
+    print("")
     who_is_first = backgammon.who_is_first()
     if who_is_first == "White":
-        backgammon.print_board()
-        backgammon.print_bar()
-        backgammon.print_bearing_off()
+        backgammon.roll_dices()
         backgammon.white_turn()
         print("")
         while game:
-            backgammon.print_board()
-            backgammon.print_bar()
-            backgammon.print_bearing_off()
             backgammon.roll_dices()
             backgammon.black_turn()
             print("")
@@ -449,9 +615,6 @@ while run:
                 game = False
                 run = False
 
-            backgammon.print_board()
-            backgammon.print_bar()
-            backgammon.print_bearing_off()
             backgammon.roll_dices()
             backgammon.white_turn()
             print("")
@@ -460,15 +623,10 @@ while run:
                 game = False
                 run = False
     else:
-        backgammon.print_board()
-        backgammon.print_bar()
-        backgammon.print_bearing_off()
+        backgammon.roll_dices()
         backgammon.black_turn()
         print("")
         while game:
-            backgammon.print_board()
-            backgammon.print_bar()
-            backgammon.print_bearing_off()
             backgammon.roll_dices()
             backgammon.white_turn()
             print("")
@@ -477,9 +635,6 @@ while run:
                 game = False
                 run = False
 
-            backgammon.print_board()
-            backgammon.print_bar()
-            backgammon.print_bearing_off()
             backgammon.roll_dices()
             backgammon.black_turn()
             print("")
