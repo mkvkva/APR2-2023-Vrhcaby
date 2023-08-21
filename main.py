@@ -421,3 +421,69 @@ class Backgammon:
                         print("\nNení možno uvést kamen na desku.")
                         self.dice_values_list = []
                         break
+
+
+run = True
+game = True
+backgammon = Backgammon()
+
+# основной игровой цикл
+while run:
+
+    who_is_first = backgammon.who_is_first()
+    if who_is_first == "White":
+        backgammon.print_board()
+        backgammon.print_bar()
+        backgammon.print_bearing_off()
+        backgammon.white_turn()
+        print("")
+        while game:
+            backgammon.print_board()
+            backgammon.print_bar()
+            backgammon.print_bearing_off()
+            backgammon.roll_dices()
+            backgammon.black_turn()
+            print("")
+            if backgammon.bearing_off_black == 15:
+                print("Vyhráli černé.")
+                game = False
+                run = False
+
+            backgammon.print_board()
+            backgammon.print_bar()
+            backgammon.print_bearing_off()
+            backgammon.roll_dices()
+            backgammon.white_turn()
+            print("")
+            if backgammon.bearing_off_white == 15:
+                print("Vyhráli bílé.")
+                game = False
+                run = False
+    else:
+        backgammon.print_board()
+        backgammon.print_bar()
+        backgammon.print_bearing_off()
+        backgammon.black_turn()
+        print("")
+        while game:
+            backgammon.print_board()
+            backgammon.print_bar()
+            backgammon.print_bearing_off()
+            backgammon.roll_dices()
+            backgammon.white_turn()
+            print("")
+            if backgammon.bearing_off_white == 15:
+                print("Vyhráli bílé.")
+                game = False
+                run = False
+
+            backgammon.print_board()
+            backgammon.print_bar()
+            backgammon.print_bearing_off()
+            backgammon.roll_dices()
+            backgammon.black_turn()
+            print("")
+            if backgammon.bearing_off_black == 15:
+                print("Vyhráli černé.")
+                game = False
+                run = False
