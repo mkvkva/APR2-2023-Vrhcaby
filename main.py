@@ -1,6 +1,5 @@
 from tabulate import tabulate
 from colorama import init
-from termcolor import colored, cprint
 
 import random
 import json
@@ -14,7 +13,7 @@ class Backgammon:
                       13: 5, 14: 0, 15: 0, 16: 0, 17: -3, 18: 0,
                       19: -5, 20: 0, 21: 0, 22: 0, 23: 0, 24: 2
                       }
-        # игровые значения
+        # игровые  значения
         self.dice1_value = 0
         self.dice2_value = 0
         self.dice_values_list = []
@@ -22,7 +21,6 @@ class Backgammon:
         self.first_turn = None
 
         self.number_point_from = 0
-        self.number_point_to = 0
         self.user_turn_value = 0
 
         self.bar_white_value = 0
@@ -141,8 +139,8 @@ class Backgammon:
                             self.home_is_full = True  # В доме белых все шашки
 
                 possible_turns = []
-                self.possible_turns_allow_kost = ["Kost"]
-                self.possible_turns_allow_pole = ["Číslo poli"]
+                self.possible_turns_allow_kost = []
+                self.possible_turns_allow_pole = []
 
                 for value in self.dice_values_list:
                     for key in self.board.keys():
@@ -166,14 +164,16 @@ class Backgammon:
                                     possible_turns.append(0)
 
                 if 1 in possible_turns:
-                    printc("Možné pohyby bilyh:", "yellow")
+                    printc("Možné pohyby bílých:", "yellow")
                     printc(
-                        tabulate([self.possible_turns_allow_kost], headers=self.possible_turns_allow_pole,
+                        tabulate([["Kost"] + self.possible_turns_allow_kost],
+                                 headers=["Číslo poli"] + self.possible_turns_allow_pole,
                                  tablefmt="fancy_grid"), "white")
+
                     break
                 else:
                     if backgammon.bearing_off_white != 15:
-                        printc("\nNení možno udělat žádný tah.", "red")
+                        printc("\nNení možné udělat žádný tah.", "red")
                         self.dice_values_list = []  # Обнуляем значения выпавших костей
                         break
                     else:
@@ -186,8 +186,8 @@ class Backgammon:
 
                     # код проверяющий можно ли сделать ход
                     possible_turns = []
-                    self.possible_turns_allow_kost = ["Kost"]
-                    self.possible_turns_allow_pole = ["Číslo poli"]
+                    self.possible_turns_allow_kost = []
+                    self.possible_turns_allow_pole = []
 
                     for value in self.dice_values_list:
                         for i in range(self.bar_white_value):
@@ -200,13 +200,16 @@ class Backgammon:
                                 self.possible_turns_allow_pole.append(25 - value)
 
                     if 1 in possible_turns:
-                        printc("Možné pohyby bilyh:", "yellow")
-                        printc(tabulate([self.possible_turns_allow_kost], headers=self.possible_turns_allow_pole,
-                                        tablefmt="fancy_grid"), "red")
+
+                        printc("Možné pohyby bílých:", "yellow")
+                        printc(
+                            tabulate([["Kost"] + self.possible_turns_allow_kost],
+                                     headers=["Číslo poli"] + self.possible_turns_allow_pole,
+                                     tablefmt="fancy_grid"), "red")
                         break
 
                     else:
-                        printc("\nNení možno uvést kamen na desku.", "red")
+                        printc("\nNení možné uvést kamen na desku.", "red")
                         self.dice_values_list = []
                         break
 
@@ -225,8 +228,8 @@ class Backgammon:
                             self.home_is_full = True
 
                 possible_turns = []
-                self.possible_turns_allow_kost = ["Kost"]
-                self.possible_turns_allow_pole = ["Číslo poli"]
+                self.possible_turns_allow_kost = []
+                self.possible_turns_allow_pole = []
 
                 for value in self.dice_values_list:
                     for key in self.board.keys():
@@ -248,7 +251,7 @@ class Backgammon:
                                     possible_turns.append(0)
 
                 if 1 in possible_turns:
-                    printc("Možné pohyby cernych:", "yellow")
+                    printc("Možné pohyby černých:", "yellow")
                     printc(
                         tabulate([self.possible_turns_allow_kost], headers=self.possible_turns_allow_pole,
                                  tablefmt="fancy_grid"), "white")
@@ -256,7 +259,7 @@ class Backgammon:
 
                 else:
                     if backgammon.bearing_off_black != 15:
-                        printc("\nNení možno udělat žádný tah.", "red")
+                        printc("\nNení možné udělat žádný tah.", "red")
                         self.dice_values_list = []
                         break
                     else:
@@ -267,8 +270,8 @@ class Backgammon:
                 if self.bar_black_value:
 
                     possible_turns = []
-                    self.possible_turns_allow_kost = ["Kost"]
-                    self.possible_turns_allow_pole = ["Číslo poli"]
+                    self.possible_turns_allow_kost = []
+                    self.possible_turns_allow_pole = []
 
                     for value in self.dice_values_list:
                         for i in range(self.bar_black_value):
@@ -281,12 +284,13 @@ class Backgammon:
                                 self.possible_turns_allow_pole.append(value)
 
                     if 1 in possible_turns:
-                        printc("Možné pohyby cernych:", "yellow")
+
+                        printc("Možné pohyby černých:", "yellow")
                         printc(tabulate([self.possible_turns_allow_kost], headers=self.possible_turns_allow_pole,
                                         tablefmt="fancy_grid"), "red")
                         break
                     else:
-                        printc("\nNení možno uvést kamen na desku.", "red")
+                        printc("\nNení možné uvést kamen na desku.", "red")
                         self.dice_values_list = []
                         break
 
@@ -295,7 +299,6 @@ class Backgammon:
         while self.dice_values_list:
 
             if self.bar_black_value == 0:
-
                 for key in self.board.keys():
                     if 1 <= key <= 18:
                         if self.board[key] < 0:
@@ -305,8 +308,8 @@ class Backgammon:
                             self.home_is_full = True
 
                 possible_turns = []
-                self.possible_turns_allow_kost = ["Kost"]
-                self.possible_turns_allow_pole = ["Číslo poli"]
+                self.possible_turns_allow_kost = []
+                self.possible_turns_allow_pole = []
 
                 for value in self.dice_values_list:
                     for key in self.board.keys():
@@ -326,13 +329,14 @@ class Backgammon:
                                     self.possible_turns_allow_pole.append(key)
                                 else:
                                     possible_turns.append(0)
-
                 if 1 in possible_turns:
                     break
-
                 else:
                     if backgammon.bearing_off_black != 15:
-                        printc("\nAI: Není možno udělat žádný tah.", "red")
+                        printc("\nAI: Není možné udělat žádný tah.", "red")
+                        print(self.dice_values_list)
+                        print(self.possible_turns_allow_pole)
+                        print(self.possible_turns_allow_kost)
                         self.dice_values_list = []
                         break
                     else:
@@ -343,8 +347,8 @@ class Backgammon:
                 if self.bar_black_value:
 
                     possible_turns = []
-                    self.possible_turns_allow_kost = ["Kost"]
-                    self.possible_turns_allow_pole = ["Číslo poli"]
+                    self.possible_turns_allow_kost = []
+                    self.possible_turns_allow_pole = []
 
                     for value in self.dice_values_list:
                         for i in range(self.bar_black_value):
@@ -359,7 +363,11 @@ class Backgammon:
                     if 1 in possible_turns:
                         break
                     else:
-                        printc("\nAI: Není možno uvést kamen na desku.", "red")
+                        printc("\nAI: Není možné uvést kamen na desku.", "red")
+                        print(self.dice_values_list)
+                        print(self.possible_turns_allow_pole)
+                        print(self.possible_turns_allow_kost)
+
                         self.dice_values_list = []
                         break
 
@@ -392,8 +400,6 @@ class Backgammon:
         is_error_turn2 = True
         self.home_is_full = None
 
-
-
         while self.dice_values_list:
             printc(
                 "------------------------------------------------------------\n                   TAH (BÍLÝCH)                    "
@@ -401,7 +407,15 @@ class Backgammon:
             printc(f"Čísla na kostkách: {self.dice1_value}, {self.dice2_value}", "green")
             self.print_board()
             self.print_bar_bearing_off()
+
+            if len(self.dice_values_list) == 0:
+                break
+
+            if backgammon.bearing_off_white == 15:
+                break
+
             self.legal_moves_white()  # Вывод допустимых ходов белыми шашками
+
             if len(self.dice_values_list) == 0:
                 break
 
@@ -551,8 +565,6 @@ class Backgammon:
                         self.dice_values_list = []
                         break
 
-            cls()
-
     # аналогичная функция для реализации хода, но уже для черных шашек
     def black_turn(self):
         printc(
@@ -570,11 +582,13 @@ class Backgammon:
             self.print_board()
             backgammon.print_bar_bearing_off()
 
-            self.legal_moves_black()
             if len(self.dice_values_list) == 0:
                 break
+
             if backgammon.bearing_off_black == 15:
                 break
+
+            self.legal_moves_black()
 
             is_error_turn3 = True
 
@@ -705,17 +719,12 @@ class Backgammon:
 
                     else:
                         print("\nNení možno uvést kamen na desku.")
+
                         self.dice_values_list = []
                         break
 
     # AI выбирает ход
     def ai_tag(self):
-        # self.number_point_from  - номер поля
-        # self.user_turn_value - значение кости
-        # self.possible_turns_allow_kost = ["Kost"]
-        # self.possible_turns_allow_pole = ["Číslo poli"]
-        # self.datas_ai = []  # Массив содержащий набор предыдущих историй ходов игроков
-        # self.history_game = []  # Текущая история игры
 
         # AI ищет хороший ход
         next_gra = False
@@ -737,13 +746,19 @@ class Backgammon:
                 # Ищем полное совпадение текущих ходов AI с историей хороших ходов
                 if step_gra == len(self.history_game) - 1:
                     count_pos_kost = 0
-                    while count_pos_kost < (len(self.possible_turns_allow_kost) - 1):
+                    while count_pos_kost <= (len(self.possible_turns_allow_kost) - 1):
                         if self.datas_ai_good[count_ai + 2] == self.possible_turns_allow_kost[count_pos_kost]:
                             self.user_turn_value = self.possible_turns_allow_kost[count_pos_kost]
-                            # Проверим разрешена ли позиция для вібранной кости
+                            # Проверим разрешена ли позиция для выбранной кости
                             if self.datas_ai_good[count_ai + 1] == self.possible_turns_allow_pole[count_pos_kost]:
                                 self.number_point_from = self.possible_turns_allow_pole[count_pos_kost]
                                 tag_found = True
+                                print("SHODUJE S HISTORIÍ DOBRÝCH VOLEB")
+                                print(self.history_game)
+                                print(self.possible_turns_allow_pole)
+                                print(self.possible_turns_allow_kost)
+                                print(self.number_point_from)
+                                print(self.user_turn_value)
                                 break
                         count_pos_kost += 1
 
@@ -751,7 +766,6 @@ class Backgammon:
             count_ai += 1
 
         next_gra = False
-        tag_found = False
         step_gra = 0
         count_ai = 0
 
@@ -773,13 +787,21 @@ class Backgammon:
                     # Полное совпадение текущих ходов с историей плохих ходов
                     if step_gra == len(self.history_game) - 1:
                         count_pos_kost = 0
-                        while count_pos_kost < (len(self.possible_turns_allow_kost) - 1):
+                        while count_pos_kost <= (len(self.possible_turns_allow_kost) - 1):
                             if self.datas_ai_bad[count_ai + 2] != self.possible_turns_allow_kost[count_pos_kost]:
                                 self.user_turn_value = self.possible_turns_allow_kost[count_pos_kost]
-                                # Проверим разрешена ли позиция для вібранной кости
+                                # Проверим разрешена ли позиция для выбранной кости
                                 if self.datas_ai_bad[count_ai + 1] == self.possible_turns_allow_pole[count_pos_kost]:
                                     self.number_point_from = self.possible_turns_allow_pole[count_pos_kost]
                                     tag_found = True
+
+                                    print("SHODUJE S HISTORIÍ ŠPATNÝCH VOLEB")
+                                    print(self.history_game)
+                                    print(self.possible_turns_allow_pole)
+                                    print(self.possible_turns_allow_kost)
+                                    print(self.number_point_from)
+                                    print(self.user_turn_value)
+
                                     break
                             count_pos_kost += 1
 
@@ -787,12 +809,16 @@ class Backgammon:
                 count_ai += 1
 
         if not tag_found:
-            if len(self.possible_turns_allow_pole) > 1:
-                printc("AI: Незнаю как ходить, пойду случайно !", "turquoise")
-                self.number_point_from = self.possible_turns_allow_pole[1]
-                self.user_turn_value = self.possible_turns_allow_kost[1]
-            else:
-                printc("AI: Найден хороший ход !", "green")
+            if len(self.possible_turns_allow_pole) > 0:
+                printc("AI: Nevím jak chodit, zvolím náhodný pohyb!", "turquoise")
+                self.number_point_from = self.possible_turns_allow_pole[0]
+                self.user_turn_value = self.possible_turns_allow_kost[0]
+        else:
+            printc("AI: Byl nalezen dobrý tah! (0)", "green")
+            print(self.possible_turns_allow_pole)
+            print(self.possible_turns_allow_kost)
+            print(self.number_point_from)
+            print(self.user_turn_value)
 
     # Ходы AI
     def ai_turn(self):
@@ -808,13 +834,20 @@ class Backgammon:
 
         while self.dice_values_list:
 
-            self.legal_moves_black_ai()
             if len(self.dice_values_list) == 0:
                 break
+
             if backgammon.bearing_off_black == 15:
                 break
 
+            self.legal_moves_black_ai()
             self.ai_tag()
+
+            if len(self.dice_values_list) == 0:
+                break
+
+            if backgammon.bearing_off_black == 15:
+                break
 
             is_error_turn3 = True
 
@@ -836,14 +869,20 @@ class Backgammon:
 
                                 else:
                                     print("AI: Na daném poli není žádného vašého kamenu.")
+                                    print(self.dice_values_list)
+                                    print(self.possible_turns_allow_pole)
+                                    print(self.possible_turns_allow_kost)
+                                    exit(1)
 
                     else:
                         print("AI: Zadejte číslo od 1 do 24.")
+                        print(self.dice_values_list)
+                        print(self.possible_turns_allow_pole)
+                        print(self.possible_turns_allow_kost)
+                        exit(1)
 
                 while is_error_turn2:
                     is_error_turn1 = True
-
-                    # self.user_turn_value = input("\nZadejte hodnotu svého tahu podle kostky: ")
 
                     if self.user_turn_value in self.dice_values_list:
                         is_error_turn2 = False
@@ -852,6 +891,9 @@ class Backgammon:
                             if self.board[self.number_point_from + self.user_turn_value] >= 2:
                                 is_error_turn2 = True
                                 print("AI: Nelze přesunout kamen, pole je obsazeno oponentem.")
+                                print(self.dice_values_list)
+                                print(self.possible_turns_allow_pole)
+                                print(self.possible_turns_allow_kost)
                                 exit(1)
                                 break
                             elif self.board[self.number_point_from + self.user_turn_value] == 1:
@@ -873,7 +915,6 @@ class Backgammon:
                                 self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
 
                         except KeyError:
-
                             if self.home_is_full:
                                 self.board[self.number_point_from] += 1
                                 self.bearing_off_black += 1
@@ -885,11 +926,19 @@ class Backgammon:
                             else:
                                 is_error_turn2 = True
                                 print("AI: Nemůžete vyvest kamen pokud nemáte je všech doma.")
+                                print(self.dice_values_list)
+                                print(self.possible_turns_allow_pole)
+                                print(self.possible_turns_allow_kost)
+
                                 exit(1)
                                 break
 
                     else:
                         print("AI: Zadejte číslo podle kostky (1).")
+                        print(self.dice_values_list)
+                        print(self.possible_turns_allow_pole)
+                        print(self.possible_turns_allow_kost)
+                        exit(1)
 
             else:
                 if self.bar_black_value:
@@ -913,7 +962,11 @@ class Backgammon:
 
                                 if self.board[self.user_turn_value] >= 2:
                                     printc("AI: Nelze přesunout kamen, pole je obsazeno oponentem.", "red")
+                                    print(self.dice_values_list)
+                                    print(self.possible_turns_allow_pole)
+                                    print(self.possible_turns_allow_kost)
                                     exit(1)
+
                                 elif self.board[self.user_turn_value] == 1:
                                     is_error_turn3 = False
                                     self.bar_black_value -= 1
@@ -936,9 +989,16 @@ class Backgammon:
 
                             else:
                                 print("AI: Zadejte číslo podle kostky (2).")
+                                print(self.dice_values_list)
+                                print(self.possible_turns_allow_pole)
+                                print(self.possible_turns_allow_kost)
+                                exit(1)
 
                     else:
                         printc("\nAI: Není možno uvést kamen na desku. Propuskaju tag !", "red")
+                        print(self.dice_values_list)
+                        print(self.possible_turns_allow_pole)
+                        print(self.possible_turns_allow_kost)
                         self.dice_values_list = []
                         break
 
@@ -999,28 +1059,31 @@ def printc(text, cl):
 
 
 # основной игровой цикл
+
+cls()
+init()
+
 while run:
 
-    cls()
-    init()
     menu_test = True
     while menu_test:
-        printc('             МЕНЮ:', 'white')
-        print("==================================")
-        print("1. Игра человек против человека")
-        print("2. Мгра с ИИ")
-        print("3. Правила игрі")
+        printc(
+            "------------------------------------------------------------\n                          MENU                          "
+            "\n------------------------------------------------------------", 'white')
+        print("1. Hra dvou hráčů")
+        print("2. Hra proti jednoduché umělé inteligenci")
+        print("3. Pravidla hry")
 
-        print("0. Віход")
+        print("0. Ukončení hry")
         print("")
 
-        menu = input("Ваш вібор: ")
+        menu = input("Váš výběr: ")
         if menu.isnumeric():
             menu = int(menu)
             if (menu < 0) or (menu > 3):
                 print("")
-                printc("Меню с таким номером не существует !", "red")
-                printc("Повторите ввод !", "red")
+                printc("Taková možnost neexistuje!", "red")
+                printc("Vyberte znovu", "red")
                 print("")
             else:
                 if menu == 1:
@@ -1030,8 +1093,8 @@ while run:
                     ai = True
                     menu_test = False
                 elif menu == 3:
-                    # Віводим правила игрі
-                    with open("pravidlo.txt", "r", encoding="utf-8") as fl:
+                    # Выводим правила игрі
+                    with open("pravidla.txt", "r", encoding="utf-8") as fl:
                         line_count = 34
                         for line in fl:
                             if line_count != 0:
@@ -1040,21 +1103,23 @@ while run:
                             else:
                                 line_count = 34
                                 print("")
-                                input('Нажмите "Enter", чтобы продолжить чтение ...')
+                                input('Stisknutím tlačítka "Enter" zobrazíte více...')
                                 print("")
                     menu_test = True
                     print("")
                 else:
                     print("")
-                    printc("Игра окончена ! Наскледаноу !", "blue")
+                    printc("Konec hry! Na shledanou!", "blue")
                     exit(0)
         else:
             print("")
-            printc("Ввод не верен ! Выберите число от 0 до 3 !", "red")
-            printc("Повторите ввод !", "red")
+            printc("Taková možnost neexistuje! Vyberte číslo od 0 do 3.", "red")
+            printc("Vyberte znovu", "red")
             print("")
 
-    printc("==================== Nová hra ! ====================", "green")
+    printc(
+        "------------------------------------------------------------\n                     NOVA HRA!                      "
+        "\n------------------------------------------------------------", "green")
     print("")
 
     read_ai_good_tags(backgammon.datas_ai_good)
@@ -1080,11 +1145,29 @@ while run:
             print("")
 
             if backgammon.bearing_off_black == 15:
+                backgammon.print_board()
+                print("")
                 print("Vyhráli černé.")
+                print("")
+                if backgammon.bearing_off_white > 0:
+                    print('Úroveň výhry: "BĚŽNÁ VÝHRA"')
+
+                else:
+                    fishka_in_desk = False
+                    for i in backgammon.board.values():
+                        if i > 0:
+                            fishka_in_desk = True
+
+                    if (backgammon.bearing_off_white == 0) and (fishka_in_desk or (backgammon.bar_white_value > 0)):
+                        print('Úroveň výhry: "BACKGAMMON"')
+
+                    else:
+                        print('Úroveň výhry: "GAMMON"')
+
                 backgammon.history_game.append(0)
                 save_ai_good_tags(backgammon.datas_ai_good + backgammon.history_game)
                 game = False
-                run = False
+                run = True
 
             else:
                 backgammon.roll_dices()
@@ -1093,11 +1176,29 @@ while run:
             save_history_json(backgammon.history_game)
             print("")
             if backgammon.bearing_off_white == 15:
+                backgammon.print_board()
+                print("")
                 print("Vyhráli bílé.")
+                print("")
+                if backgammon.bearing_off_white > 0:
+                    print('Úroveň výhry: "BĚŽNÁ VÝHRA"')
+
+                else:
+                    fishka_in_desk = False
+                    for i in backgammon.board.values():
+                        if i < 0:
+                            fishka_in_desk = True
+
+                    if (backgammon.bearing_off_black == 0) and (fishka_in_desk or (backgammon.bar_black_value > 0)):
+                        print('Úroveň výhry: "BACKGAMMON"')
+
+                    else:
+                        print('Úroveň výhry: "GAMMON"')
+
                 backgammon.history_game.append(0)
                 save_ai_bad_tags(backgammon.datas_ai_bad + backgammon.history_game)
                 game = False
-                run = False
+                run = True
     else:
         backgammon.history_game.append(-99)  # Первая запись в историю ( -99 - первыми ходят черные)
         save_history_json(backgammon.history_game)
@@ -1116,11 +1217,28 @@ while run:
             save_history_json(backgammon.history_game)
             print("")
             if backgammon.bearing_off_white == 15:
+                backgammon.print_board()
+                print("")
                 print("Vyhráli bílé.")
+                print("")
+                if backgammon.bearing_off_white > 0:
+                    print('Úroveň výhry: "BĚŽNÁ VÝHRA"')
+
+                else:
+                    fishka_in_desk = False
+                    for i in backgammon.board.values():
+                        if i < 0:
+                            fishka_in_desk = True
+
+                    if (backgammon.bearing_off_black == 0) and (fishka_in_desk or (backgammon.bar_black_value > 0)):
+                        print('Úroveň výhry: "BACKGAMMON"')
+
+                    else:
+                        print('Úroveň výhry: "GAMMON"')
                 backgammon.history_game.append(0)
                 save_ai_bad_tags(backgammon.datas_ai_bad + backgammon.history_game)
                 game = False
-                run = False
+                run = True
 
             else:
                 backgammon.roll_dices()
@@ -1133,8 +1251,25 @@ while run:
             save_history_json(backgammon.history_game)
             print("")
             if backgammon.bearing_off_black == 15:
+                backgammon.print_board()
+                print("")
                 print("Vyhráli černé.")
+                print("")
+                if backgammon.bearing_off_white > 0:
+                    print('Úroveň výhry: "BĚŽNÁ VÝHRA"')
+
+                else:
+                    fishka_in_desk = False
+                    for i in backgammon.board.values():
+                        if i > 0:
+                            fishka_in_desk = True
+
+                    if (backgammon.bearing_off_white == 0) and (fishka_in_desk or (backgammon.bar_white_value > 0)):
+                        print('Úroveň výhry: "BACKGAMMON"')
+
+                    else:
+                        print('Úroveň výhry: "GAMMON"')
                 backgammon.history_game.append(0)
                 save_ai_good_tags(backgammon.datas_ai_good + backgammon.history_game)
                 game = False
-                run = False
+                run = True
