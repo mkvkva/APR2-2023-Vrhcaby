@@ -1,5 +1,6 @@
 from tabulate import tabulate
 import random
+import json
 
 
 class Backgammon:
@@ -27,6 +28,12 @@ class Backgammon:
         self.bearing_off_white = 0
         self.bearing_off_black = 0
 
+        self.home_is_full = None
+        self.possible_turns_allow_kost = []
+        self.possible_turns_allow_pole = []
+        self.datas_ai = []  # Массив содержащий набор предыдущих историй ходов игроков
+        self.history_game = []  # Массив содержащий текущую историю ходов игроков
+
     def print_board(self):
         print("Hrací pole:")
         point_numbers_up = []
@@ -48,7 +55,7 @@ class Backgammon:
                     point_values_up.append(str(value))
 
             if key < 10:
-                point_numbers_down.append(str(key)+" ")
+                point_numbers_down.append(str(key) + " ")
                 if value == 0:
                     point_values_down.append("  ")
                 if (abs(value) > 0) and (abs(value) < 10):
@@ -76,13 +83,14 @@ class Backgammon:
         for i in point_numbers_down:
             position -= 1
             point_numbers_down_mirror[position] = i
-            
+
         position = len(point_values_down)
         for i in point_values_down:
             position -= 1
             point_values_down_mirror[position] = i
 
-        table = point_numbers_up, point_values_up, ["  "] * len(point_values_down), point_values_down_mirror, point_numbers_down_mirror
+        table = point_numbers_up, point_values_up, ["  "] * len(
+            point_values_down), point_values_down_mirror, point_numbers_down_mirror
         print(tabulate(table, tablefmt="fancy_grid"))
 
     # функция выводящая количество выбитых шашек и шашек в баре
@@ -112,50 +120,55 @@ class Backgammon:
     def legal_moves_white(self):
         while self.dice_values_list:
 
-            if self.bar_white_value == 0:   # Если нет белых шашек отправленных в бар
+            if self.bar_white_value == 0:  # Если нет белых шашек отправленных в бар
                 # Проверка: можно ли сделать хоть один ход белыми шашками
 
                 for key in self.board.keys():
                     if 7 <= key <= 24:
                         if self.board[key] > 0:
-                            home_is_full = False  # Дом белых еще не заполнен
+                            self.home_is_full = False  # Дом белых еще не заполнен
                             break
                         else:
-                            home_is_full = True   # В доме белых все шашки
+                            self.home_is_full = True  # В доме белых все шашки
 
                 possible_turns = []
-                possible_turns_allow_kost = ["Kost"]
-                possible_turns_allow_pole = ["Číslo poli"]
+                self.possible_turns_allow_kost = ["Kost"]
+                self.possible_turns_allow_pole = ["Číslo poli"]
 
                 for value in self.dice_values_list:
                     for key in self.board.keys():
                         if self.board[key] > 0:  # Перебираем на доске только позиции белых
 
                             try:
-                                if self.board[key-value] <= -2:  # Если позиция занята двумя и более черными шашками
+                                if self.board[key - value] <= -2:  # Если позиция занята двумя и более черными шашками
                                     possible_turns.append(0)
                                 else:
                                     possible_turns.append(1)
-                                    possible_turns_allow_kost.append(value)
-                                    possible_turns_allow_pole.append(key)
+                                    self.possible_turns_allow_kost.append(value)
+                                    self.possible_turns_allow_pole.append(key)
 
                             except KeyError:
-                                if home_is_full:
+                                if self.home_is_full:
                                     possible_turns.append(1)
-                                    possible_turns_allow_kost.append(value)
-                                    possible_turns_allow_pole.append(key)
+                                    self.possible_turns_allow_kost.append(value)
+                                    self.possible_turns_allow_pole.append(key)
 
                                 else:
                                     possible_turns.append(0)
 
                 if 1 in possible_turns:
                     print("Možné pohyby:")
-                    print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost, tablefmt="fancy_grid"))
+                    print(
+                        tabulate([self.possible_turns_allow_pole], headers=self.possible_turns_allow_kost, tablefmt="fancy_grid"))
                     break
                 else:
-                    print("\nNení možno udělat žádný tah.")
-                    self.dice_values_list = []   # Обнуляем значения выпавших костей
-                    break
+                    if backgammon.bearing_off_white == 15:
+                        print("\nNení možno udělat žádný tah.")
+                        self.dice_values_list = []  # Обнуляем значения выпавших костей
+                        break
+                    else:
+                        self.dice_values_list = []  # Обнуляем значения выпавших костей
+                        break
 
             else:
                 # ситуация когда игрок должен ввести свою побитую шашку в игру
@@ -163,8 +176,8 @@ class Backgammon:
 
                     # код проверяющий можно ли сделать ход
                     possible_turns = []
-                    possible_turns_allow_kost = ["Kost"]
-                    possible_turns_allow_pole = ["Číslo poli"]
+                    self.possible_turns_allow_kost = ["Kost"]
+                    self.possible_turns_allow_pole = ["Číslo poli"]
 
                     for value in self.dice_values_list:
                         for i in range(self.bar_white_value):
@@ -173,12 +186,12 @@ class Backgammon:
                                 possible_turns.append(0)
                             else:
                                 possible_turns.append(1)
-                                possible_turns_allow_kost.append(value)
-                                possible_turns_allow_pole.append(25 - value)
+                                self.possible_turns_allow_kost.append(value)
+                                self.possible_turns_allow_pole.append(25 - value)
 
                     if 1 in possible_turns:
                         print("Možné pohyby:")
-                        print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost,
+                        print(tabulate([self.possible_turns_allow_pole], headers=self.possible_turns_allow_kost,
                                        tablefmt="fancy_grid"))
                         break
 
@@ -196,50 +209,55 @@ class Backgammon:
                 for key in self.board.keys():
                     if 1 <= key <= 18:
                         if self.board[key] < 0:
-                            home_is_full = False
+                            self.home_is_full = False
                             break
                         else:
-                            home_is_full = True
+                            self.home_is_full = True
 
                 possible_turns = []
-                possible_turns_allow_kost = ["Kost"]
-                possible_turns_allow_pole = ["Číslo poli"]
+                self.possible_turns_allow_kost = ["Kost"]
+                self.possible_turns_allow_pole = ["Číslo poli"]
 
                 for value in self.dice_values_list:
                     for key in self.board.keys():
                         if self.board[key] < 0:
 
                             try:
-                                if self.board[key+value] >= 2:
+                                if self.board[key + value] >= 2:
                                     possible_turns.append(0)
                                 else:
                                     possible_turns.append(1)
-                                    possible_turns_allow_kost.append(value)
-                                    possible_turns_allow_pole.append(key)
+                                    self.possible_turns_allow_kost.append(value)
+                                    self.possible_turns_allow_pole.append(key)
                             except KeyError:
-                                if home_is_full:
+                                if self.home_is_full:
                                     possible_turns.append(1)
-                                    possible_turns_allow_kost.append(value)
-                                    possible_turns_allow_pole.append(key)
+                                    self.possible_turns_allow_kost.append(value)
+                                    self.possible_turns_allow_pole.append(key)
                                 else:
                                     possible_turns.append(0)
 
                 if 1 in possible_turns:
                     print("Možné pohyby:")
-                    print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost, tablefmt="fancy_grid"))
+                    print(
+                        tabulate([self.possible_turns_allow_pole], headers=self.possible_turns_allow_kost, tablefmt="fancy_grid"))
                     break
 
                 else:
-                    print("\nNení možno udělat žádný tah.")
-                    self.dice_values_list = []
-                    break
+                    if backgammon.bearing_off_black != 15:
+                        print("\nNení možno udělat žádný tah.")
+                        self.dice_values_list = []
+                        break
+                    else:
+                        self.dice_values_list = []
+                        break
 
             else:
                 if self.bar_black_value:
 
                     possible_turns = []
-                    possible_turns_allow_kost = ["Kost"]
-                    possible_turns_allow_pole = ["Číslo poli"]
+                    self.possible_turns_allow_kost = ["Kost"]
+                    self.possible_turns_allow_pole = ["Číslo poli"]
 
                     for value in self.dice_values_list:
                         for i in range(self.bar_black_value):
@@ -248,18 +266,92 @@ class Backgammon:
                                 possible_turns.append(0)
                             else:
                                 possible_turns.append(1)
-                                possible_turns_allow_kost.append(value)
-                                possible_turns_allow_pole.append(value)
+                                self.possible_turns_allow_kost.append(value)
+                                self.possible_turns_allow_pole.append(value)
 
                     if 1 in possible_turns:
                         print("Možné pohyby:")
-                        print(tabulate([possible_turns_allow_pole], headers=possible_turns_allow_kost,
+                        print(tabulate([self.possible_turns_allow_pole], headers=self.possible_turns_allow_kost,
                                        tablefmt="fancy_grid"))
                         break
                     else:
                         print("\nNení možno uvést kamen na desku.")
                         self.dice_values_list = []
                         break
+
+    # Найдем допустимые ходы для AI
+    def legal_moves_black_ai(self):
+        while self.dice_values_list:
+
+            if self.bar_black_value == 0:
+
+                for key in self.board.keys():
+                    if 1 <= key <= 18:
+                        if self.board[key] < 0:
+                            self.home_is_full = False
+                            break
+                        else:
+                            self.home_is_full = True
+
+                possible_turns = []
+                self.possible_turns_allow_kost = ["Kost"]
+                self.possible_turns_allow_pole = ["Číslo poli"]
+
+                for value in self.dice_values_list:
+                    for key in self.board.keys():
+                        if self.board[key] < 0:
+
+                            try:
+                                if self.board[key + value] >= 2:
+                                    possible_turns.append(0)
+                                else:
+                                    possible_turns.append(1)
+                                    self.possible_turns_allow_kost.append(value)
+                                    self.possible_turns_allow_pole.append(key)
+                            except KeyError:
+                                if self.home_is_full:
+                                    possible_turns.append(1)
+                                    self.possible_turns_allow_kost.append(value)
+                                    self.possible_turns_allow_pole.append(key)
+                                else:
+                                    possible_turns.append(0)
+
+                if 1 in possible_turns:
+                    break
+
+                else:
+                    if backgammon.bearing_off_black != 15:
+                        print("\nAI: Není možno udělat žádný tah.")
+                        self.dice_values_list = []
+                        break
+                    else:
+                        self.dice_values_list = []
+                        break
+
+            else:
+                if self.bar_black_value:
+
+                    possible_turns = []
+                    self.possible_turns_allow_kost = ["Kost"]
+                    self.possible_turns_allow_pole = ["Číslo poli"]
+
+                    for value in self.dice_values_list:
+                        for i in range(self.bar_black_value):
+
+                            if self.board[value] >= 2:
+                                possible_turns.append(0)
+                            else:
+                                possible_turns.append(1)
+                                self.possible_turns_allow_kost.append(value)
+                                self.possible_turns_allow_pole.append(value)
+
+                    if 1 in possible_turns:
+                        break
+                    else:
+                        print("\nNení možno uvést kamen na desku.")
+                        self.dice_values_list = []
+                        break
+
 
     # функция определяющая кто ходит первым
     def who_is_first(self):
@@ -290,7 +382,7 @@ class Backgammon:
 
         is_error_turn1 = True
         is_error_turn2 = True
-        home_is_full = None
+        self.home_is_full = None
 
         print(f"Čísla na kostkách: {self.dice1_value}, {self.dice2_value}")
 
@@ -299,6 +391,11 @@ class Backgammon:
             self.print_board()
             self.print_bar_bearing_off()
             self.legal_moves_white()  # Вывод допустимых ходов белыми шашками
+            if len(self.dice_values_list) == 0:
+                break
+
+            if backgammon.bearing_off_white == 15:
+                break
 
             is_error_turn3 = True
 
@@ -343,29 +440,38 @@ class Backgammon:
                             # либо просто переместиться на новый пункт
                             # либо её удастся вывести из игры, если все шашки игрока будут находиться в доме
                             try:
-                                if self.board[self.number_point_from-self.user_turn_value] <= -2:
+                                if self.board[self.number_point_from - self.user_turn_value] <= -2:
                                     is_error_turn2 = True
                                     print("Nelze přesunout kamen, pole je obsazeno oponentem.")
                                     break
-                                elif self.board[self.number_point_from-self.user_turn_value] == -1:
+                                elif self.board[self.number_point_from - self.user_turn_value] == -1:
                                     self.board[self.number_point_from] -= 1
-                                    self.board[self.number_point_from-self.user_turn_value] += 2
+                                    self.board[self.number_point_from - self.user_turn_value] += 2
                                     self.dice_values_list.remove(self.user_turn_value)
                                     self.bar_black_value += 1
                                     print("Kamen oponenta byl vyhozen.")
+                                    # запишем в историю ход белых
+                                    self.history_game.append(self.number_point_from)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
                                 else:
                                     self.board[self.number_point_from] -= 1
-                                    self.board[self.number_point_from-self.user_turn_value] += 1
+                                    self.board[self.number_point_from - self.user_turn_value] += 1
                                     self.dice_values_list.remove(self.user_turn_value)
                                     print("Kamen byl přesunen.")
+                                    # запишем в историю ход белых
+                                    self.history_game.append(self.number_point_from)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
 
                             except KeyError:
 
-                                if home_is_full:
+                                if self.home_is_full:
                                     self.board[self.number_point_from] -= 1
                                     self.bearing_off_white += 1
                                     self.dice_values_list.remove(self.user_turn_value)
                                     print("Kamen byl vyveden.")
+                                    # запишем в историю этот ход белых
+                                    self.history_game.append(self.number_point_from)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
                                 else:
                                     is_error_turn2 = True
                                     print("Nemůžete vyvest kamen pokud nemáte je všech doma.")
@@ -401,21 +507,26 @@ class Backgammon:
                                 self.user_turn_value = int(self.user_turn_value)
                                 if self.user_turn_value in self.dice_values_list:
 
-                                    if self.board[25-self.user_turn_value] <= -2:
+                                    if self.board[25 - self.user_turn_value] <= -2:
                                         print("Nelze přesunout kamen, pole je obsazeno oponentem.")
-                                    elif self.board[25-self.user_turn_value] == -1:
+                                    elif self.board[25 - self.user_turn_value] == -1:
                                         is_error_turn3 = False
                                         self.bar_white_value -= 1
-                                        self.board[25-self.user_turn_value] += 2
+                                        self.board[25 - self.user_turn_value] += 2
                                         self.dice_values_list.remove(self.user_turn_value)
                                         self.bar_black_value += 1
                                         print("Kamen oponenta byl vyhozen.")
+                                        # запишем в историю этот ход белых
+                                        self.history_game.append(25 - self.user_turn_value)  # Запоминаем выбраную позицию
+                                        self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
                                     else:
                                         is_error_turn3 = False
                                         self.bar_white_value -= 1
-                                        self.board[25-self.user_turn_value] += 1
+                                        self.board[25 - self.user_turn_value] += 1
                                         self.dice_values_list.remove(self.user_turn_value)
                                         print("Kamen byl přesunen.")
+                                        self.history_game.append(25 - self.user_turn_value)  # Запоминаем выбраную позицию
+                                        self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
 
                                 else:
                                     print("Zadejte číslo podle kostky.")
@@ -433,7 +544,7 @@ class Backgammon:
 
         is_error_turn1 = True
         is_error_turn2 = True
-        home_is_full = None
+        self.home_is_full = None
 
         print(f"Čísla na kostkách: {self.dice1_value}, {self.dice2_value}")
 
@@ -443,41 +554,14 @@ class Backgammon:
             backgammon.print_bar_bearing_off()
 
             self.legal_moves_black()
+            if len(self.dice_values_list) == 0:
+                break
+            if backgammon.bearing_off_black == 15:
+                break
 
             is_error_turn3 = True
 
             if self.bar_black_value == 0:
-
-                for key in self.board.keys():
-                    if 1 <= key <= 18:
-                        if self.board[key] < 0:
-                            home_is_full = False
-                            break
-                        else:
-                            home_is_full = True
-
-                possible_turns = []
-                for value in self.dice_values_list:
-                    for key in self.board.keys():
-                        if self.board[key] < 0:
-
-                            try:
-                                if self.board[key+value] >= 2:
-                                    possible_turns.append(0)
-                                else:
-                                    possible_turns.append(1)
-                            except KeyError:
-                                if home_is_full:
-                                    possible_turns.append(1)
-                                else:
-                                    possible_turns.append(0)
-
-                if 1 in possible_turns:
-                    pass
-                else:
-                    print("\nNení možno udělat žádný tah.")
-                    self.dice_values_list = []
-                    break
 
                 while is_error_turn1:
                     is_error_turn2 = True
@@ -511,29 +595,38 @@ class Backgammon:
                             is_error_turn2 = False
 
                             try:
-                                if self.board[self.number_point_from+self.user_turn_value] >= 2:
+                                if self.board[self.number_point_from + self.user_turn_value] >= 2:
                                     is_error_turn2 = True
                                     print("Nelze přesunout kamen, pole je obsazeno oponentem.")
                                     break
-                                elif self.board[self.number_point_from+self.user_turn_value] == 1:
+                                elif self.board[self.number_point_from + self.user_turn_value] == 1:
                                     self.board[self.number_point_from] += 1
-                                    self.board[self.number_point_from+self.user_turn_value] -= 2
+                                    self.board[self.number_point_from + self.user_turn_value] -= 2
                                     self.dice_values_list.remove(self.user_turn_value)
                                     self.bar_white_value += 1
                                     print("Kamen oponenta byl vyhozen.")
+                                    # запишем в историю этот ход черных
+                                    self.history_game.append(-self.number_point_from)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
                                 else:
                                     self.board[self.number_point_from] += 1
-                                    self.board[self.number_point_from+self.user_turn_value] -= 1
+                                    self.board[self.number_point_from + self.user_turn_value] -= 1
                                     self.dice_values_list.remove(self.user_turn_value)
                                     print("Kamen byl přesunen.")
+                                    # запишем в историю этот ход черных
+                                    self.history_game.append(-self.number_point_from)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
 
                             except KeyError:
 
-                                if home_is_full:
+                                if self.home_is_full:
                                     self.board[self.number_point_from] += 1
                                     self.bearing_off_black += 1
                                     self.dice_values_list.remove(self.user_turn_value)
                                     print("Kamen byl vyveden.")
+                                    # запишем в историю этот ход черных
+                                    self.history_game.append(-self.number_point_from)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
                                 else:
                                     is_error_turn2 = True
                                     print("Nemůžete vyvest kamen pokud nemáte je všech doma.")
@@ -575,12 +668,18 @@ class Backgammon:
                                         self.dice_values_list.remove(self.user_turn_value)
                                         self.bar_white_value += 1
                                         print("Kamen oponenta byl vyhozen.")
+                                        # запишем в историю этот ход черных
+                                        self.history_game.append(-self.user_turn_value)  # Запоминаем выбраную позицию
+                                        self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
                                     else:
                                         is_error_turn3 = False
                                         self.bar_black_value -= 1
                                         self.board[self.user_turn_value] -= 1
                                         self.dice_values_list.remove(self.user_turn_value)
                                         print("Kamen byl přesunen.")
+                                        # запишем в историю этот ход черных
+                                        self.history_game.append(-self.user_turn_value)  # Запоминаем выбраную позицию
+                                        self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
 
                                 else:
                                     print("Zadejte číslo podle kostky.")
@@ -592,6 +691,215 @@ class Backgammon:
                         self.dice_values_list = []
                         break
 
+    # AI ищет хороший ход
+    def ai_tag(self):
+        # self.number_point_from  - номер поля
+        # self.user_turn_value - значение кости
+        # self.possible_turns_allow_kost = ["Kost"]
+        # self.possible_turns_allow_pole = ["Číslo poli"]
+        # self.datas_ai = []  # Массив содержащий набор предыдущих историй ходов игроков
+        # self.history_game = []  # Текущая история игры
+
+        next_gra = False
+        tag_found = False
+        step_gra = 0
+
+        count_ai = 0
+        while (count_ai < len(self.datas_ai)) and not tag_found:
+
+            if next_gra:
+                if (self.datas_ai[count_ai] == -99) or (self.datas_ai[count_ai] == 99):
+                    next_gra = False
+            else:
+                for h in self.history_game:
+                    if h != self.datas_ai[count_ai]:
+                        next_gra = True
+                        break
+                    else:
+                        step_gra += 1
+
+                # Полное совпадение текущих ходов с историей ходов
+                if step_gra == len(self.history_game)-1:
+                    for k in self.dice_values_list:
+                        if self.datas_ai[count_ai+2] == k:
+                            self.user_turn_value = k
+                            self.number_point_from = self.datas_ai[count_ai+1]
+                            tag_found = True
+                else:
+                    if len(self.possible_turns_allow_pole) > 1:
+                        self.number_point_from = self.possible_turns_allow_pole[1]
+                        self.user_turn_value = self.possible_turns_allow_kost[1]
+                    tag_found = True
+
+            step_gra = 0
+            count_ai += 1
+
+    # Ходы AI
+    def ai_turn(self):
+        print("---------------\nTAH AI (ČERNÝCH)\n---------------")
+
+        is_error_turn1 = True
+        is_error_turn2 = True
+        self.home_is_full = None
+
+        print(f"Čísla na kostkách: {self.dice1_value}, {self.dice2_value}")
+
+        while self.dice_values_list:
+
+            self.legal_moves_black_ai()
+            if len(self.dice_values_list) == 0:
+                break
+            if backgammon.bearing_off_black == 15:
+                break
+
+            self.ai_tag()
+
+            is_error_turn3 = True
+
+            if self.bar_black_value == 0:
+
+                while is_error_turn1:
+                    is_error_turn2 = True
+
+                    #self.number_point_from = input("\nZadejte číslo poli ze kterého chcete posunout kamen: ")
+
+                    print("AI: číslo poli = ", self.number_point_from, end=" ")
+
+                    if 1 <= self.number_point_from <= 24:
+
+                        for key in self.board.keys():
+                            if key == self.number_point_from:
+                                if self.board[self.number_point_from] < 0:
+
+                                    is_error_turn1 = False
+
+                                else:
+                                    print("AI: Na daném poli není žádného vašého kamenu.")
+
+                    else:
+                        print("AI: Zadejte číslo od 1 do 24.")
+
+                while is_error_turn2:
+                    is_error_turn1 = True
+
+                    #self.user_turn_value = input("\nZadejte hodnotu svého tahu podle kostky: ")
+                    print(", kost = ", self.user_turn_value)
+
+                    if self.user_turn_value in self.dice_values_list:
+                        is_error_turn2 = False
+
+                        try:
+                            if self.board[self.number_point_from + self.user_turn_value] >= 2:
+                                is_error_turn2 = True
+                                print("AI: Nelze přesunout kamen, pole je obsazeno oponentem.")
+                                break
+                            elif self.board[self.number_point_from + self.user_turn_value] == 1:
+                                self.board[self.number_point_from] += 1
+                                self.board[self.number_point_from + self.user_turn_value] -= 2
+                                self.dice_values_list.remove(self.user_turn_value)
+                                self.bar_white_value += 1
+                                print("AI: Kamen oponenta byl vyhozen.")
+                                # запишем в историю этот ход черных
+                                self.history_game.append(-self.number_point_from)  # Запоминаем выбраную позицию
+                                self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
+                            else:
+                                self.board[self.number_point_from] += 1
+                                self.board[self.number_point_from + self.user_turn_value] -= 1
+                                self.dice_values_list.remove(self.user_turn_value)
+                                print("AI: Kamen byl přesunen.")
+                                # запишем в историю этот ход черных
+                                self.history_game.append(-self.number_point_from)  # Запоминаем выбраную позицию
+                                self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
+
+                        except KeyError:
+
+                            if self.home_is_full:
+                               self.board[self.number_point_from] += 1
+                               self.bearing_off_black += 1
+                               self.dice_values_list.remove(self.user_turn_value)
+                               print("AI: Kamen byl vyveden.")
+                               # запишем в историю этот ход черных
+                               self.history_game.append(-self.number_point_from)  # Запоминаем выбраную позицию
+                               self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
+                            else:
+                               is_error_turn2 = True
+                               print("AI: Nemůžete vyvest kamen pokud nemáte je všech doma.")
+                               break
+
+                    else:
+                        print("AI: Zadejte číslo podle kostky (1).")
+
+            else:
+                if self.bar_black_value:
+
+                    possible_turns = []
+                    for value in self.dice_values_list:
+                        for i in range(self.bar_black_value):
+
+                            if self.board[value] >= 2:
+                                possible_turns.append(0)
+                            else:
+                                possible_turns.append(1)
+
+                    if 1 in possible_turns:
+
+                        while is_error_turn3:
+
+                            print("\nAI: Musíte vyvest kamen z baru.", end=" ")
+                            #self.user_turn_value = input("Zadejte hodnotu svého tahu podle kostky: ")
+                            print(" Kost = ", self.user_turn_value)
+
+
+                            if self.user_turn_value in self.dice_values_list:
+
+                                if self.board[self.user_turn_value] >= 2:
+                                    print("AI: Nelze přesunout kamen, pole je obsazeno oponentem.")
+                                elif self.board[self.user_turn_value] == 1:
+                                    is_error_turn3 = False
+                                    self.bar_black_value -= 1
+                                    self.board[self.user_turn_value] -= 2
+                                    self.dice_values_list.remove(self.user_turn_value)
+                                    self.bar_white_value += 1
+                                    print("AI: Kamen oponenta byl vyhozen.")
+                                    # запишем в историю этот ход черных
+                                    self.history_game.append(-self.user_turn_value)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
+                                else:
+                                    is_error_turn3 = False
+                                    self.bar_black_value -= 1
+                                    self.board[self.user_turn_value] -= 1
+                                    self.dice_values_list.remove(self.user_turn_value)
+                                    print("AI: Kamen byl přesunen.")
+                                    # запишем в историю этот ход черных
+                                    self.history_game.append(-self.user_turn_value)  # Запоминаем выбраную позицию
+                                    self.history_game.append(self.user_turn_value)  # Запоминаем выбраный камень
+
+                            else:
+                                print("AI: Zadejte číslo podle kostky (2).")
+
+                    else:
+                        print("\nAI: Není možno uvést kamen na desku.")
+                        self.dice_values_list = []
+                        break
+
+
+def save_history_json(datas):
+    with open('history.dat', 'w') as outfile:
+        json.dump(datas, outfile)
+
+
+def save_ai_json(datas):
+    with open('ai.dat', 'w') as outfile:
+        json.dump(datas, outfile)
+
+
+def read_ai_json(datas):
+    with open('ai.dat') as json_file:
+        data = json.load(json_file)
+        for p in data:
+            datas.append(p)
+
+
 run = True
 game = True
 backgammon = Backgammon()
@@ -601,44 +909,84 @@ while run:
 
     print("==================== Nová hra ! ====================")
     print("")
+
+    ai = True
+
+    read_ai_json(backgammon.datas_ai)
+
     who_is_first = backgammon.who_is_first()
     if who_is_first == "White":
+
+        backgammon.history_game.append(99)  # Первая запись в историю ( 99 - первыми ходят белые)
         backgammon.roll_dices()
         backgammon.white_turn()
+        save_history_json(backgammon.history_game)
         print("")
         while game:
             backgammon.roll_dices()
-            backgammon.black_turn()
+
+            if ai:
+                backgammon.ai_turn()
+            else:
+                backgammon.black_turn()
+
+            save_history_json(backgammon.history_game)
             print("")
+
             if backgammon.bearing_off_black == 15:
                 print("Vyhráli černé.")
+                backgammon.history_game.append(0)
+                save_ai_json(backgammon.datas_ai+backgammon.history_game)
                 game = False
                 run = False
 
-            backgammon.roll_dices()
-            backgammon.white_turn()
+            else:
+                backgammon.roll_dices()
+                backgammon.white_turn()
+
+            save_history_json(backgammon.history_game)
             print("")
             if backgammon.bearing_off_white == 15:
                 print("Vyhráli bílé.")
+                backgammon.history_game.append(0)
                 game = False
                 run = False
     else:
+        backgammon.history_game.append(-99)  # Первая запись в историю ( -99 - первыми ходят черные)
+        save_history_json(backgammon.history_game)
         backgammon.roll_dices()
-        backgammon.black_turn()
+
+        if ai:
+            backgammon.ai_turn()
+        else:
+            backgammon.black_turn()
+
+        save_history_json(backgammon.history_game)
         print("")
         while game:
             backgammon.roll_dices()
             backgammon.white_turn()
+            save_history_json(backgammon.history_game)
             print("")
             if backgammon.bearing_off_white == 15:
                 print("Vyhráli bílé.")
+                backgammon.history_game.append(0)
                 game = False
                 run = False
 
-            backgammon.roll_dices()
-            backgammon.black_turn()
+            else:
+                backgammon.roll_dices()
+
+                if ai:
+                    backgammon.ai_turn()
+                else:
+                    backgammon.black_turn()
+
+            save_history_json(backgammon.history_game)
             print("")
             if backgammon.bearing_off_black == 15:
                 print("Vyhráli černé.")
+                backgammon.history_game.append(0)
+                save_ai_json(backgammon.datas_ai+backgammon.history_game)
                 game = False
                 run = False
